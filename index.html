@@ -93,6 +93,17 @@
     $('clothForm').onsubmit=async e=>{e.preventDefault();const f=$('photo').files[0];let photo='';if(f){photo=await new Promise(resolve=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.readAsDataURL(f)})}const cat=$('category').value;wardrobe.push({id:crypto.randomUUID(),name:$('itemName').value.trim(),category:cat,range:$('range').value,...(cat==='Schuhe'?{rain:$('shoeRain').value}:{}),icon:cat==='Hosen'?'🩳':cat==='Extras'?'🧤':cat==='Schuhe'?'👟':'👕',photo});persist();drawWardrobe();recommend();e.target.reset();$('shoeRainField').hidden=true;$('modal').style.display='none';toast('Kleidungsstück gespeichert.')};
     drawWardrobe();$('city').value=locationMode==='gps'?'':(lastLocation.query||'Wien');if(locationMode==='gps')useMyLocation();else loadWeather(lastLocation.lat,lastLocation.lon,lastLocation.name,'manual',lastLocation.query||'Wien');
   </script>
-  <script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js').catch(()=>{}))}</script>
+  <script>
+    if('serviceWorker' in navigator){
+      let isReloading=false;
+      const hadController=Boolean(navigator.serviceWorker.controller);
+      navigator.serviceWorker.addEventListener('controllerchange',()=>{
+        if(hadController&&!isReloading){isReloading=true;window.location.reload()}
+      });
+      window.addEventListener('load',async()=>{
+        try{const registration=await navigator.serviceWorker.register('./service-worker.js',{updateViaCache:'none'});await registration.update()}catch{}
+      });
+    }
+  </script>
 </body>
 </html>
